@@ -1,0 +1,65 @@
+# Make sure to check the documentation at https://goreleaser.com
+before:
+  hooks:
+    - go generate ./...
+    - go mod download
+
+gomod:
+  proxy: true
+  env:
+    - GOPROXY=https://proxy.golang.org,direct
+    - GOSUMDB=sum.golang.org
+
+builds:
+  - binary: wago
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - "386"
+      - amd64
+      - arm
+      - arm64
+    goarm:
+      - "6"
+      - "7"
+    ldflags:
+      - >-
+        -s -w
+        -X github.com/chumaumenze/wago/cmd.version={{.Version}}
+        -X github.com/chumaumenze/wago/cmd.commit={{.Commit}}
+        -X github.com/chumaumenze/wago/cmd.commitDate={{.CommitDate}}
+        -X github.com/gzuidhof/tygo/cmd.target={{.Env.GOOS}}
+
+#archives:
+#  - replacements:
+##      linux: Linux
+#      386: i386
+#      amd64: x86_64
+
+nfpms:
+  - id: wago
+    package_name: wago
+    file_name_template: "{{ .ConventionalFileName }}"
+    vendor: Chuma Umenze
+    homepage: https://github.com/chumaumenze/wago
+    maintainer: Chuma Umenze <git@chumaumenze.com>
+    description: Go packages to webassembly
+    license: Unlicensed
+    formats:
+      - deb
+      - rpm
+
+checksum:
+  name_template: 'checksums.txt'
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+#changelog:
+#  sort: asc
+#  filters:
+#    exclude:
+#      - '^docs:'
+#      - '^test:'
