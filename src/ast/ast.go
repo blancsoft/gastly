@@ -15,10 +15,10 @@ import (
 )
 
 type Result struct {
+	Name   string
 	Ast    *Ast
 	Dump   string
-	Source string
-	Name   string
+	Source map[string]string
 	Err    error
 }
 
@@ -28,24 +28,39 @@ func FromPackages(pkgNames ...string) []Result {
 	if pkgs, err = loadPackages(pkgNames...); err != nil {
 		log.Error(err)
 	}
-	defer func() {
-		err := removePackages(false, pkgNames...)
-		if err != nil {
-			log.Error(err)
-		}
-	}()
-
 	accumulator := func(x string, y packages.Error, i int) string {
 		return fmt.Sprintf("%s\n========\n%s\n", x, y.Msg)
 	}
 	var pkgAsts []Result
 	for _, p := range pkgs {
 		if errMsg := reduce(p.Errors, accumulator, ""); errMsg != "" {
-			r := Result{Name: p.Name, Err: eris.New(errMsg)}
+			r := Result{Name: p.ID, Err: eris.New(errMsg)}
 			pkgAsts = append(pkgAsts, r)
 			continue
 		}
-		r := Generate(p.Name, p.Fset, p.Syntax)
+
+		srcs := map[string]string{}
+		for i := 0; i < len(p.Syntax); i++ {
+			fname := p.GoFiles[i]
+			node := p.Syntax[i]
+
+			var source bytes.Buffer
+			if err := printer.Fprint(&source, token.NewFileSet(), node); err != nil {
+				r := Result{Name: p.ID, Err: eris.Wrapf(err, "unable to collate pkg source")}
+				pkgAsts = append(pkgAsts, r)
+				continue
+			}
+			srcs[fname] = source.String()
+		}
+
+		t, d, err := Generate(p.Fset, p.Syntax)
+		r := Result{
+			Name:   p.ID,
+			Ast:    t,
+			Dump:   d.String(),
+			Source: srcs,
+			Err:    err,
+		}
 		pkgAsts = append(pkgAsts, r)
 	}
 	return pkgAsts
@@ -57,41 +72,38 @@ func FromSourceCode(fname string, code string) Result {
 	if err != nil {
 		return Result{Name: fname, Err: err}
 	}
-	return Generate(fname, fset, node)
-}
-
-func FromSourceCodes(fname string, codes ...string) []Result {
-	var r []Result
-	for _, code := range codes {
-		fset := token.NewFileSet()
-		node, err := parser.ParseFile(fset, fname, code, parser.ParseComments)
-		if err != nil {
-			r = append(r, Result{Name: fname, Err: err})
-		}
-		r = append(r, Generate(fname, fset, node))
-	}
-	return r
-}
-
-func Generate(name string, fset *token.FileSet, node any) Result {
-	var err error
-	var pkgAstBuffer bytes.Buffer
-	if pkgAstBuffer, err = dumpAst(fset, node); err != nil {
-		return Result{Err: eris.Wrapf(err, "unable to dump AST")}
-	}
 
 	var source bytes.Buffer
 	if err := printer.Fprint(&source, fset, node); err != nil {
-		return Result{Err: eris.Wrapf(err, "unable to collate source")}
+		return Result{Name: fname, Err: eris.Wrapf(err, "unable to collate source")}
 	}
-	pkgAst, err := BuildAst("", node)
+
+	t, d, err := Generate(fset, node)
+	if err != nil {
+		return Result{Name: fname, Err: err}
+	}
+
 	return Result{
-		Ast:    pkgAst,
-		Dump:   pkgAstBuffer.String(),
-		Source: source.String(),
-		Name:   name,
+		Name:   fname,
+		Ast:    t,
+		Dump:   d.String(),
+		Source: map[string]string{fname: source.String()},
 		Err:    err,
 	}
+}
+
+func Generate(fset *token.FileSet, node any) (*Ast, bytes.Buffer, error) {
+	var err error
+	var pkgAstBuffer bytes.Buffer
+	if pkgAstBuffer, err = dumpAst(fset, node); err != nil {
+		return nil, bytes.Buffer{}, eris.Wrapf(err, "unable to dump AST")
+	}
+
+	pkgAst, err := BuildAst("", node)
+	if err != nil {
+		return nil, bytes.Buffer{}, eris.Wrapf(err, "unable to build AST")
+	}
+	return pkgAst, pkgAstBuffer, nil
 }
 
 type accumulatorFunc func(string, packages.Error, int) string

@@ -13,6 +13,12 @@ import (
 )
 
 func loadPackages(pkgNames ...string) ([]*packages.Package, error) {
+	defer func() {
+		err := removePackages(false, pkgNames...)
+		if err != nil {
+			log.Error(err)
+		}
+	}()
 	for _, name := range pkgNames {
 		log.Infof("Fetching package %s", name)
 		// FIXME: Disable path lookup; use absolute path
