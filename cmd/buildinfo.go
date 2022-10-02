@@ -2,10 +2,10 @@ package cmd
 
 // Field injected by ldflag. See goreleaser.yml
 var (
-	version    = "<unknown>"
-	commitDate = "date unknown"
-	commit     = ""
-	target     = ""
+	version    = "<version>"
+	commitDate = "<commitDate>"
+	commit     = "<commit>"
+	target     = "<target>"
 )
 
 func Version() string {

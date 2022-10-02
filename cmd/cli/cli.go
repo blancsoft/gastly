@@ -1,15 +1,16 @@
-package cmd
+package main
 
 import (
 	"fmt"
 	"github.com/spf13/viper"
 	"os"
 
+	"github.com/chumaumenze/wago/cmd"
 	"github.com/spf13/cobra"
 )
 
 var cfgFile = ""
-var cliVersion = fmt.Sprintf("%s %s (%s) %s", Version(), Target(), CommitDate(), Commit())
+var cliVersion = fmt.Sprintf("%s %s (%s) %s", cmd.Version(), cmd.Target(), cmd.CommitDate(), cmd.Commit())
 var rootCmd = &cobra.Command{
 	Use:     "wago",
 	Short:   "Go packages to webassembly",
@@ -28,7 +29,7 @@ func init() {
 	rootCmd.AddCommand(generateCmd)
 }
 
-func Execute() {
+func main() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
