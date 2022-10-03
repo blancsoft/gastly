@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/chumaumenze/wago/src/ast"
@@ -14,6 +15,7 @@ func init() {
 	generateCmd.Flags().Bool("json", false, "Export AST as json")
 	generateCmd.Flags().Bool("src", false, "Export AST source code")
 	generateCmd.Flags().Bool("file", false, "Read input as file")
+	generateCmd.Flags().String("out", "output", "Output directory")
 }
 
 var generateCmd = &cobra.Command{
@@ -25,6 +27,7 @@ var generateCmd = &cobra.Command{
 		exportJson, _ := cmd.Flags().GetBool("json")
 		exportSrc, _ := cmd.Flags().GetBool("src")
 		fileArg, _ := cmd.Flags().GetBool("file")
+		outdirArg, _ := cmd.Flags().GetString("out")
 
 		var results []ast.Result
 		if fileArg {
@@ -43,7 +46,7 @@ var generateCmd = &cobra.Command{
 				continue
 			}
 
-			base := strings.ReplaceAll(r.Name, "/", "_")
+			base := filepath.Join(outdirArg, strings.ReplaceAll(r.Name, "/", "_"))
 			if exportJson {
 				fname := base + ".ast.json"
 				bb, err := json.Marshal(r.Ast)
@@ -53,8 +56,12 @@ var generateCmd = &cobra.Command{
 				createWrite(fname, string(bb))
 			}
 			if exportSrc {
-				fname := base + ".src.txt"
-				createWrite(fname, r.Source)
+				for k, v := range r.Source {
+					b := filepath.Base(k)
+					b = strings.TrimSuffix(b, filepath.Ext(b))
+					fname := filepath.Join(base, b+".src.go")
+					createWrite(fname, v)
+				}
 			}
 			fname := base + ".dump.txt"
 			createWrite(fname, r.Dump)
@@ -63,6 +70,7 @@ var generateCmd = &cobra.Command{
 }
 
 func createWrite(fname, content string) {
+	_ = os.MkdirAll(filepath.Dir(fname), 0755)
 	fd, err := os.Create(fname)
 	defer func() {
 		err := fd.Close()
