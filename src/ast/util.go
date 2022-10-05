@@ -31,7 +31,7 @@ func loadPackages(pkgNames ...string) ([]*packages.Package, error) {
 	}
 
 	return packages.Load(&packages.Config{
-		Mode: packages.NeedSyntax | packages.NeedFiles,
+		Mode: packages.NeedName | packages.NeedSyntax | packages.NeedFiles | packages.NeedTypes,
 	}, pkgNames...)
 }
 
