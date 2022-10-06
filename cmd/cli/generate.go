@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -49,11 +48,7 @@ var generateCmd = &cobra.Command{
 			base := filepath.Join(outdirArg, strings.ReplaceAll(r.Name, "/", "_"))
 			if exportJson {
 				fname := base + ".ast.json"
-				bb, err := json.Marshal(r.Ast)
-				if err != nil {
-					log.Error(err)
-				}
-				createWrite(fname, string(bb))
+				createWrite(fname, string(r.Ast))
 			}
 			if exportSrc {
 				for k, v := range r.Source {
@@ -64,7 +59,7 @@ var generateCmd = &cobra.Command{
 				}
 			}
 			fname := base + ".dump.txt"
-			createWrite(fname, r.Dump)
+			createWrite(fname, string(r.Dump))
 		}
 	},
 }

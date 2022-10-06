@@ -7,11 +7,11 @@ import (
 	"go/ast"
 	"go/token"
 	"io"
-	"os"
 	"reflect"
 	"strconv"
 	"strings"
 
+	"github.com/rotisserie/eris"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -40,6 +40,17 @@ func (j *JsonPointer) Pop() string {
 	return ""
 }
 
+const (
+	// PosInt expands token.Pos to integer value
+	PosInt = iota
+
+	// PosStr expands token.Pos to full string value using fset.Position
+	PosStr
+
+	// PosFset expands token.Pos to map using fset.Position
+	PosFset
+)
+
 type AstWriter struct {
 	jsonOutput  io.Writer
 	pointerMap  map[any]string
@@ -48,11 +59,21 @@ type AstWriter struct {
 	last        byte
 	currentPath JsonPointer
 	minify      bool
+	expandPos   int
 }
 
 func (a *AstWriter) Write(data []byte) (n int, err error) {
 	var m int
-	for _, b := range data {
+	for i, b := range data {
+		if a.minify && b == '\n' {
+			// Remove newline from data
+			n := i + 1
+			if n > len(data) {
+				n = len(data)
+			}
+			data = append(data[:i], data[n:]...)
+			continue
+		}
 		if a.last == '\n' {
 			for j := a.indentLevel; j > 0; j-- {
 				_, err = a.jsonOutput.Write(indent)
@@ -78,9 +99,6 @@ func (a *AstWriter) walk(v reflect.Value, isKey bool, pos map[string]token.Posit
 
 	switch v.Kind() {
 	case reflect.Interface:
-		//z, b := v.Interface().(ast.Node)
-		//fmt.Printf("%T, %t\n", z, b)
-
 		if n, ok := v.Interface().(ast.Node); ok {
 			loc := map[string]token.Position{
 				"start": a.fset.Position(n.Pos()),
@@ -90,7 +108,6 @@ func (a *AstWriter) walk(v reflect.Value, isKey bool, pos map[string]token.Posit
 		} else {
 			a.walk(v.Elem(), isKey, pos)
 		}
-		//a.walk(v.Elem(), isKey, nil)
 
 	case reflect.Map:
 		a.printf("{\n")
@@ -124,6 +141,8 @@ func (a *AstWriter) walk(v reflect.Value, isKey bool, pos map[string]token.Posit
 			a.printf("\n")
 			a.indentLevel++
 			a.printf(`"@type": %q,`, "RecursivePtr")
+			a.printf("\n")
+			a.printf(`"@targetType": %q,`, reflect.Indirect(v).Type())
 			a.printf("\n")
 			a.printf(`"@path": %q`, ptrpath)
 			a.printf("\n")
@@ -163,16 +182,6 @@ func (a *AstWriter) walk(v reflect.Value, isKey bool, pos map[string]token.Posit
 			a.walk(reflect.ValueOf(pos), false, nil)
 		}
 
-		//if n, ok := v.Interface().(ast.Node); ok {
-		//	start := a.fset.Position(n.Pos())
-		//	end := a.fset.Position(n.End())
-		//	a.printf(",")
-		//	a.printf("\n")
-		//	a.printf("%q: ", "@pos")
-		//	v := map[string]any{"start": start, "end": end}
-		//	a.walk(reflect.ValueOf(v), false, false)
-		//}
-
 		for i, n := 0, t.NumField(); i < n; i++ {
 			// exclude non-exported fields because their
 			// values cannot be accessed via reflection
@@ -196,23 +205,21 @@ func (a *AstWriter) walk(v reflect.Value, isKey bool, pos map[string]token.Posit
 		v := v.Interface()
 		switch v := v.(type) {
 		case string:
-			// print strings in quotes
 			a.printf("%q", v)
-			return
-		case int, token.Pos:
-			// position values can be printed nicely if we have a file set
-			if a.fset != nil {
-				a.printf("%d", v)
-				//a.printf("%q", a.fset.Position(v))
-				//a.walk(reflect.ValueOf(a.fset.Position(v)), isKey, false)
+		case int:
+			a.printf("%d", v)
+		case token.Pos:
+			if a.fset != nil && a.expandPos == PosStr {
+				a.printf("%q", a.fset.Position(v))
+			} else if a.fset != nil && a.expandPos == PosFset {
+				a.walk(reflect.ValueOf(a.fset.Position(v)), isKey, nil)
 			} else {
 				a.printf("%d", v)
 			}
-			a.printf("%d", v)
-			return
+		default:
+			a.printf(`"%v"`, v)
 		}
-		// default
-		a.printf(`"%v"`, v)
+
 		if isKey {
 			a.currentPath.Push(fmt.Sprintf(`"%v"`, v))
 		}
@@ -226,22 +233,27 @@ func (a *AstWriter) printf(format string, z ...any) {
 	}
 }
 
-func ParseAst(fset *token.FileSet, v any) (r map[string]any, err error) {
+func ParseAst(fset *token.FileSet, v any) (r []byte, err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			err = e.(error)
 		}
 	}()
 
-	var o bytes.Buffer
+	o := new(bytes.Buffer)
 	a := AstWriter{
-		jsonOutput: &o,
+		jsonOutput: o,
 		pointerMap: make(map[any]string),
 		fset:       fset,
+		minify:     true,
+		expandPos:  PosFset,
 	}
 	a.walk(reflect.ValueOf(v), false, nil)
 
-	os.WriteFile("writer.json", o.Bytes(), 0755)
-	err = json.Unmarshal(o.Bytes(), &r)
+	if json.Valid(o.Bytes()) {
+		r = o.Bytes()
+	} else {
+		err = eris.New("invalid json output")
+	}
 	return
 }

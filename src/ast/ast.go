@@ -15,11 +15,11 @@ import (
 )
 
 type Result struct {
-	Name   string
-	Ast    *Ast
-	Dump   string
-	Source map[string]string
-	Err    error
+	Name   string            `json:"name,omitempty"`
+	Ast    []byte            `json:"ast,omitempty"`
+	Dump   []byte            `json:"dump,omitempty"`
+	Source map[string]string `json:"source,omitempty"`
+	Err    error             `json:"err,omitempty"`
 }
 
 func FromPackages(pkgNames ...string) []Result {
@@ -57,7 +57,7 @@ func FromPackages(pkgNames ...string) []Result {
 		r := Result{
 			Name:   p.ID,
 			Ast:    t,
-			Dump:   d.String(),
+			Dump:   d.Bytes(),
 			Source: srcs,
 			Err:    err,
 		}
@@ -86,20 +86,20 @@ func FromSourceCode(fname string, code string) Result {
 	return Result{
 		Name:   fname,
 		Ast:    t,
-		Dump:   d.String(),
+		Dump:   d.Bytes(),
 		Source: map[string]string{fname: source.String()},
 		Err:    err,
 	}
 }
 
-func Generate(fset *token.FileSet, node any) (*Ast, bytes.Buffer, error) {
+func Generate(fset *token.FileSet, node any) ([]byte, bytes.Buffer, error) {
 	var err error
 	var pkgAstBuffer bytes.Buffer
 	if pkgAstBuffer, err = dumpAst(fset, node); err != nil {
 		return nil, bytes.Buffer{}, eris.Wrapf(err, "unable to dump AST")
 	}
 
-	pkgAst, err := BuildAst("", node)
+	pkgAst, err := ParseAst(fset, node)
 	if err != nil {
 		return nil, bytes.Buffer{}, eris.Wrapf(err, "unable to build AST")
 	}
