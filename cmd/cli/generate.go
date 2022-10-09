@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/chumaumenze/wago/src/ast"
+	"github.com/chumaumenze/wago/ast"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )

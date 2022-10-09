@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/chumaumenze/wago/src/ast"
+	"github.com/chumaumenze/wago/ast"
 )
 
 func main() {
