@@ -1,8 +1,9 @@
-package wago
+package gastly
 
 import (
 	"fmt"
 
+	"github.com/rotisserie/eris"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -52,7 +53,7 @@ func init() {
 	viper.SetDefault("exportPath", "./")
 
 	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+		if ok := eris.As(err, viper.ConfigFileNotFoundError{}); ok {
 			// Config file not found; ignore error if desired
 			fmt.Println("Config file not found; using default values")
 		} else {

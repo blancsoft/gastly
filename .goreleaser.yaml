@@ -1,4 +1,5 @@
 # Make sure to check the documentation at https://goreleaser.com
+dist: ./target
 before:
   hooks:
     - go generate ./...
@@ -11,7 +12,9 @@ gomod:
     - GOSUMDB=sum.golang.org
 
 builds:
-  - binary: wago
+  - id: cli
+    binary: gastly
+    main: ./cmd/cli
     env:
       - CGO_ENABLED=0
     goos:
@@ -27,25 +30,49 @@ builds:
     ldflags:
       - >-
         -s -w
-        -X github.com/chumaumenze/wago/cmd.version={{.Version}}
-        -X github.com/chumaumenze/wago/cmd.commit={{.Commit}}
-        -X github.com/chumaumenze/wago/cmd.commitDate={{.CommitDate}}
+        -X github.com/blancsoft/gastly/cmd.version={{.Version}}
+        -X github.com/blancsoft/gastly/cmd.commit={{.Commit}}
+        -X github.com/blancsoft/gastly/cmd.commitDate={{.CommitDate}}
         -X github.com/gzuidhof/tygo/cmd.target={{.Env.GOOS}}
 
-#archives:
-#  - replacements:
-##      linux: Linux
-#      386: i386
-#      amd64: x86_64
+  - id: wasm
+    binary: wasm/gastly
+    main: ./cmd/wasm
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - js
+    goarch:
+      - wasm
+
+  - id: lambda
+    binary: lambda/main
+    main: ./cmd/lambda
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+    ignore:
+      - goarm: "6"
+        gomips: hardfloat
+
+archives:
+  - id: lambda
+    format: zip
+    builds:
+      - lambda
+    strip_parent_binary_folder: true
 
 nfpms:
-  - id: wago
-    package_name: wago
+  - id: gastly
+    package_name: gastly
     file_name_template: "{{ .ConventionalFileName }}"
     vendor: Chuma Umenze
-    homepage: https://github.com/chumaumenze/wago
-    maintainer: Chuma Umenze <git@chumaumenze.com>
-    description: Go packages to webassembly
+    homepage: https://github.com/blancsoft/gastly
+    maintainer: Chuma Umenze <chuma@blancsoft.com>
+    description: Go abstract syntax tree navigator
     license: Unlicensed
     formats:
       - deb

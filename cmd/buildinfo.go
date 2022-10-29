@@ -1,6 +1,6 @@
 package cmd
 
-// Field injected by ldflag. See goreleaser.yml
+// Field injected by ldflag. See goreleaser.yml.
 var (
 	version    = "<version>"
 	commitDate = "<commitDate>"

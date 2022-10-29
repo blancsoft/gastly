@@ -7,7 +7,6 @@ import (
 	"go/printer"
 	"go/token"
 
-	//"golang.org/x/tools/go/ast/astutil"
 	"golang.org/x/tools/go/packages"
 
 	"github.com/rotisserie/eris"
@@ -16,8 +15,8 @@ import (
 
 type Result struct {
 	Name   string            `json:"name,omitempty"`
-	Ast    []byte            `json:"ast,omitempty"`
-	Dump   []byte            `json:"dump,omitempty"`
+	Ast    string            `json:"ast,omitempty"`
+	Dump   string            `json:"dump,omitempty"`
 	Source map[string]string `json:"source,omitempty"`
 	Err    error             `json:"err,omitempty"`
 }
@@ -56,8 +55,8 @@ func FromPackages(pkgNames ...string) []Result {
 		t, d, err := Generate(p.Fset, p.Syntax)
 		r := Result{
 			Name:   p.ID,
-			Ast:    t,
-			Dump:   d.Bytes(),
+			Ast:    t.String(),
+			Dump:   d.String(),
 			Source: srcs,
 			Err:    err,
 		}
@@ -85,14 +84,14 @@ func FromSourceCode(fname string, code string) Result {
 
 	return Result{
 		Name:   fname,
-		Ast:    t,
-		Dump:   d.Bytes(),
+		Ast:    t.String(),
+		Dump:   d.String(),
 		Source: map[string]string{fname: source.String()},
 		Err:    err,
 	}
 }
 
-func Generate(fset *token.FileSet, node any) ([]byte, bytes.Buffer, error) {
+func Generate(fset *token.FileSet, node any) (*bytes.Buffer, bytes.Buffer, error) {
 	var err error
 	var pkgAstBuffer bytes.Buffer
 	if pkgAstBuffer, err = dumpAst(fset, node); err != nil {
@@ -103,7 +102,7 @@ func Generate(fset *token.FileSet, node any) ([]byte, bytes.Buffer, error) {
 	if err != nil {
 		return nil, bytes.Buffer{}, eris.Wrapf(err, "unable to build AST")
 	}
-	return pkgAst, pkgAstBuffer, nil
+	return &pkgAst, pkgAstBuffer, nil
 }
 
 type accumulatorFunc func(string, packages.Error, int) string

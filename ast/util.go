@@ -5,20 +5,29 @@ import (
 	"fmt"
 	"go/ast"
 	"go/token"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"reflect"
 
+	"github.com/rotisserie/eris"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/tools/go/packages"
 )
 
-func loadPackages(pkgNames ...string) ([]*packages.Package, error) {
-	defer func() {
-		err := removePackages(false, pkgNames...)
-		if err != nil {
-			log.Error(err)
-		}
-	}()
+var pkgLoaderDir string
+
+func init() {
+	var err error
+	pkgLoaderDir, err = os.MkdirTemp(os.TempDir(), "go*")
+	if err != nil {
+		log.Fatal(eris.Wrapf(err, "unable to create package loader directory"))
+	}
+
+	CreateWrite(filepath.Join(pkgLoaderDir, "go.mod"), "module main\n\ngo 1.16\n")
+}
+
+func loadPackages(pkgNames ...string) (pkgs []*packages.Package, err error) {
 	for _, name := range pkgNames {
 		log.Infof("Fetching package %s", name)
 		// FIXME: Disable path lookup; use absolute path
@@ -32,6 +41,7 @@ func loadPackages(pkgNames ...string) ([]*packages.Package, error) {
 
 	return packages.Load(&packages.Config{
 		Mode: packages.NeedName | packages.NeedSyntax | packages.NeedFiles | packages.NeedTypes,
+		Dir:  pkgLoaderDir,
 	}, pkgNames...)
 }
 
@@ -58,11 +68,12 @@ func runCmd(name string, args ...string) (stdout, stderr bytes.Buffer, err error
 	cmd := exec.Command(name, args...)
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
+	cmd.Dir = pkgLoaderDir
 
 	log.Infof("Executing command %s\n", cmd.String())
 	err = cmd.Run()
-	log.Debug("===StdOut: %s===\n%s", cmd.String(), stdout.String())
-	log.Debug("===StdErr: %s===\n%s", cmd.String(), stderr.String())
+	log.Debug("===StdOut: " + cmd.String() + "===\n" + stdout.String())
+	log.Debug("===StdErr: " + cmd.String() + "===\n" + stderr.String())
 	return stdout, stderr, err
 }
 
@@ -71,4 +82,50 @@ func dumpAst(fset *token.FileSet, x any) (pkgAstBuffer bytes.Buffer, err error) 
 		return true
 	})
 	return
+}
+
+func DumpEnv() {
+	for _, pair := range os.Environ() {
+		fmt.Println(pair)
+	}
+}
+
+func SetEnv(k, v string) {
+	if err := os.Setenv(k, v); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func GetEnvDefault(k, v string) (d string) {
+	var ok bool
+	if d, ok = os.LookupEnv(k); !ok {
+		d = v
+	}
+	return
+}
+
+func CreateWrite(fname, content string) {
+	_ = os.MkdirAll(filepath.Dir(fname), 0755)
+	fd, err := os.Create(fname)
+	defer func() {
+		err := fd.Close()
+		if err != nil {
+			log.Error(err)
+		}
+	}()
+	if err != nil {
+		log.Fatal(err)
+	}
+	_, err = fd.WriteString(content)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func OpenRead(fname string) string {
+	bb, err := os.ReadFile(fname)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return string(bb)
 }

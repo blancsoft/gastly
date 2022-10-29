@@ -1,13 +1,13 @@
 package main
 
 import (
-	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/chumaumenze/wago/ast"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+
+	"github.com/blancsoft/gastly/ast"
 )
 
 func init() {
@@ -31,7 +31,7 @@ var generateCmd = &cobra.Command{
 		var results []ast.Result
 		if fileArg {
 			for _, filename := range args {
-				code := openRead(filename)
+				code := ast.OpenRead(filename)
 				r := ast.FromSourceCode(filename, code)
 				results = append(results, r)
 			}
@@ -48,44 +48,19 @@ var generateCmd = &cobra.Command{
 			base := filepath.Join(outdirArg, strings.ReplaceAll(r.Name, "/", "_"))
 			if exportJson {
 				fname := base + ".ast.json"
-				createWrite(fname, string(r.Ast))
+				//a, _ := json.Marshal(r.Ast)
+				ast.CreateWrite(fname, r.Ast)
 			}
 			if exportSrc {
 				for k, v := range r.Source {
 					b := filepath.Base(k)
 					b = strings.TrimSuffix(b, filepath.Ext(b))
 					fname := filepath.Join(base, b+".src.go")
-					createWrite(fname, v)
+					ast.CreateWrite(fname, v)
 				}
 			}
 			fname := base + ".dump.txt"
-			createWrite(fname, string(r.Dump))
+			ast.CreateWrite(fname, string(r.Dump))
 		}
 	},
-}
-
-func createWrite(fname, content string) {
-	_ = os.MkdirAll(filepath.Dir(fname), 0755)
-	fd, err := os.Create(fname)
-	defer func() {
-		err := fd.Close()
-		if err != nil {
-			log.Error(err)
-		}
-	}()
-	if err != nil {
-		log.Fatal(err)
-	}
-	_, err = fd.WriteString(content)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func openRead(fname string) string {
-	bb, err := os.ReadFile(fname)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return string(bb)
 }

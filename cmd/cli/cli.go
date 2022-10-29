@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/chumaumenze/wago/cmd"
+	"github.com/blancsoft/gastly/cmd"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

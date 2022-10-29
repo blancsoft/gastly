@@ -41,13 +41,13 @@ func (j *JsonPointer) Pop() string {
 }
 
 const (
-	// PosInt expands token.Pos to integer value
+	// PosInt expands token.Pos to integer value.
 	PosInt = iota
 
-	// PosStr expands token.Pos to full string value using fset.Position
+	// PosStr expands token.Pos to full string value using fset.Position.
 	PosStr
 
-	// PosFset expands token.Pos to map using fset.Position
+	// PosFset expands token.Pos to map using fset.Position.
 	PosFset
 )
 
@@ -233,7 +233,7 @@ func (a *AstWriter) printf(format string, z ...any) {
 	}
 }
 
-func ParseAst(fset *token.FileSet, v any) (r []byte, err error) {
+func ParseAst(fset *token.FileSet, v any) (r bytes.Buffer, err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			err = e.(error)
@@ -251,7 +251,7 @@ func ParseAst(fset *token.FileSet, v any) (r []byte, err error) {
 	a.walk(reflect.ValueOf(v), false, nil)
 
 	if json.Valid(o.Bytes()) {
-		r = o.Bytes()
+		r = *o
 	} else {
 		err = eris.New("invalid json output")
 	}
