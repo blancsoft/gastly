@@ -52,7 +52,7 @@ func FromPackages(pkgNames ...string) []Result {
 			srcs[fname] = source.String()
 		}
 
-		t, d, err := Generate(p.Fset, p.Syntax)
+		t, d, err := generate(p.Fset, p.Syntax)
 		r := Result{
 			Name:   p.ID,
 			Ast:    t.String(),
@@ -77,7 +77,7 @@ func FromSourceCode(fname string, code string) Result {
 		return Result{Name: fname, Err: eris.Wrapf(err, "unable to collate source")}
 	}
 
-	t, d, err := Generate(fset, node)
+	t, d, err := generate(fset, node)
 	if err != nil {
 		return Result{Name: fname, Err: err}
 	}
@@ -91,7 +91,7 @@ func FromSourceCode(fname string, code string) Result {
 	}
 }
 
-func Generate(fset *token.FileSet, node any) (*bytes.Buffer, bytes.Buffer, error) {
+func generate(fset *token.FileSet, node any) (*bytes.Buffer, bytes.Buffer, error) {
 	var err error
 	var pkgAstBuffer bytes.Buffer
 	if pkgAstBuffer, err = dumpAst(fset, node); err != nil {

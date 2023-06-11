@@ -17,7 +17,7 @@ import (
 
 var pkgLoaderDir string
 
-func init() {
+func ensureGoModule() {
 	var err error
 	pkgLoaderDir, err = os.MkdirTemp(os.TempDir(), "go*")
 	if err != nil {
@@ -45,7 +45,9 @@ func loadPackages(pkgNames ...string) (pkgs []*packages.Package, err error) {
 	}, pkgNames...)
 }
 
+//lint:ignore U1000 removePackages will be removed uf not needed after ast.FromPackages is refactored
 func removePackages(purgeAll bool, pkgNames ...string) error {
+	// nolint: U1000
 	if purgeAll {
 		log.Info("Purging all build cache")
 		_, _, err := runCmd("go", "clean", "-x", "-cache")
@@ -65,6 +67,7 @@ func removePackages(purgeAll bool, pkgNames ...string) error {
 }
 
 func runCmd(name string, args ...string) (stdout, stderr bytes.Buffer, err error) {
+	ensureGoModule()
 	cmd := exec.Command(name, args...)
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr

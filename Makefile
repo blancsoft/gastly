@@ -1,38 +1,30 @@
-.PHONY: serve build-server build test lint clean setup help
+.PHONY: serve build-wasm build test lint clean help
 SHELL := '/bin/bash'
 .DEFAULT_GOAL := help
 
-OUT_DIR="dist/"
-PWA_MAIN="./cmd/pwa/main.go"
+
 
 serve: build-server
 	@go run $(PWA_MAIN) -serve
 
-build-server: clean
-	GOARCH=wasm GOOS=js go build -o web/app.wasm $(PWA_MAIN)
-	@go run $(PWA_MAIN) -build
-	@cp -r web/ $(OUT_DIR)
+build-wasm: clean
+	@GOARCH=wasm GOOS=js go build -o "./pwa/public/gastly.wasm" "./cmd/wasm/main.go"
+	@cp $(shell go env GOROOT)/misc/wasm/wasm_exec.js "./pwa/public/wasm_exec.js"
 
 test:
 	@go test ./...
+	@GOOS=js GOARCH=wasm go test -v -exec="$(shell go env GOROOT)/misc/wasm/go_js_wasm_exec" ./...
 
 lint: ## lint go files in current directory
-	@printf "=========Linting=========\n\n"
-	@golangci-lint run
+	@go run honnef.co/go/tools/cmd/staticcheck@2023.1 ./...
 
 build: ## build in snapshot mode
-	@printf "=========Building binaries in snapshot mode=========\n\n"
 	@goreleaser release --snapshot --rm-dist
 
 clean: ## remove build artefacts
-	@printf "=========Cleaning up=========\n\n"
-	@rm -rf output/ target/ web/app.wasm $(OUT_DIR)
 	@go clean
+	@rm -rf "./pwa/public/gastly.wasm" "./pwa/public/wasm_exec.js"
 
-setup: ## install dev tools
-	@printf "=========Getting dev tools=========\n\n"
-	@go install github.com/goreleaser/goreleaser@latest
-	@printf "To install \033[36mgolangci-lint\033[0m, see https://golangci-lint.run/usage/install/#local-installation\n\n"
 
 # got from :https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 # but disallow underscore in command names as we want some private to have format "_command-name"
