@@ -19,6 +19,7 @@ type Result struct {
 	Dump   string            `json:"dump,omitempty"`
 	Source map[string]string `json:"source,omitempty"`
 	Err    error             `json:"err,omitempty"`
+	ErrMsg string            `json:"errMsg,omitempty"`
 }
 
 func FromPackages(pkgNames ...string) []Result {
@@ -59,6 +60,7 @@ func FromPackages(pkgNames ...string) []Result {
 			Dump:   d.String(),
 			Source: srcs,
 			Err:    err,
+			ErrMsg: err.Error(),
 		}
 		pkgAsts = append(pkgAsts, r)
 	}
@@ -69,17 +71,18 @@ func FromSourceCode(fname string, code string) Result {
 	fset := token.NewFileSet()
 	node, err := parser.ParseFile(fset, fname, code, parser.ParseComments)
 	if err != nil {
-		return Result{Name: fname, Err: err}
+		return Result{Name: fname, Err: err, ErrMsg: err.Error(),}
 	}
 
 	var source bytes.Buffer
 	if err := printer.Fprint(&source, fset, node); err != nil {
-		return Result{Name: fname, Err: eris.Wrapf(err, "unable to collate source")}
+		err = eris.Wrapf(err, "unable to collate source")
+		return Result{Name: fname, Err: err, ErrMsg: err.Error(),}
 	}
 
 	t, d, err := generate(fset, node)
 	if err != nil {
-		return Result{Name: fname, Err: err}
+		return Result{Name: fname, Err: err, ErrMsg: err.Error(),}
 	}
 
 	return Result{
@@ -87,7 +90,6 @@ func FromSourceCode(fname string, code string) Result {
 		Ast:    t.String(),
 		Dump:   d.String(),
 		Source: map[string]string{fname: source.String()},
-		Err:    err,
 	}
 }
 
