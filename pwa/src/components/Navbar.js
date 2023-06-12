@@ -5,14 +5,11 @@ import {
   AppBar, Toolbar,
   InputBase,
   Typography, Container, Box,
-  SvgIcon,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import AdbIcon from '@mui/icons-material/Adb';
 import BugReportIcon from '@mui/icons-material/BugReport';
 import { styled, alpha } from '@mui/material/styles';
 
-import { ReactComponent as GastlyLogo } from '../assets/logo.svg';
 
 const Search = styled('div')(({ theme }) => ({
   position: 'relative',

@@ -21,7 +21,7 @@ const Editor = ({ state, setState }) => {
     console.log('value:', update);
     const key = keys[activeTabIndex]
     setState({...state, data: {...state.data, [key]: update}})
-  }, [state]);
+  }, [state, activeTabIndex, keys, setState]);
 
 
   return (
