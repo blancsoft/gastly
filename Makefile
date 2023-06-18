@@ -8,8 +8,9 @@ serve: build-server
 	@go run $(PWA_MAIN) -serve
 
 build-wasm: clean
-	@GOARCH=wasm GOOS=js go build -o "./pwa/public/gastly.wasm" "./cmd/wasm/main.go"
-	@cp $(shell go env GOROOT)/misc/wasm/wasm_exec.js "./pwa/public/wasm_exec.js"
+	@cp $(shell go env GOROOT)/misc/wasm/wasm_exec.js "./pwa/src/assets/wasm_exec.js"
+	@GOARCH=wasm GOOS=js go build -ldflags="-s -w" -o "./pwa/src/assets/gastly.wasm" "./cmd/wasm/main.go"
+	@#brotli --force --rm --output="pwa/src/assets/gastly.wasm.br" "pwa/public/gastly.wasm"
 
 test:
 	@go test ./...
@@ -23,7 +24,7 @@ build: ## build in snapshot mode
 
 clean: ## remove build artefacts
 	@go clean
-	@rm -rf "./pwa/public/gastly.wasm" "./pwa/public/wasm_exec.js"
+	@rm -rf "./pwa/public/gastly.wasm*" "./pwa/public/wasm_exec.js"
 
 
 # got from :https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html

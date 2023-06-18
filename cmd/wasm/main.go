@@ -4,17 +4,12 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"os/signal"
-	"syscall"
 	"syscall/js"
 
 	"github.com/blancsoft/gastly/ast"
 )
 
 func main() {
-	println("This is GASTly Renderer")
-
 	gastly := js.ValueOf(map[string]any{
 		"FromSourceCode": js.FuncOf(func(this js.Value, args []js.Value) any {
 			if len(args) < 2 {
@@ -36,11 +31,8 @@ func main() {
 	})
 	js.Global().Set("Gastly", gastly)
 
-	count := 0
 	for {
-		fmt.Println("Count: ", count)
-		quitChannel := make(chan os.Signal, 1)
-		signal.Notify(quitChannel, syscall.SIGINT, syscall.SIGTERM)
+		quitChannel := make(chan *struct{})
 		func() {
 			defer func() {
 				if v := recover(); v != nil {
@@ -48,8 +40,7 @@ func main() {
 				}
 			}()
 
-			fmt.Println("This is Gastly!")
-
+			println("This is GASTly Renderer")
 			// block until interrupt/terminate signal
 			if terminate := <-quitChannel; terminate != nil {
 				fmt.Println("Goodbye from Gastly!")
@@ -58,6 +49,5 @@ func main() {
 			fmt.Println("Recovering from panic...")
 			return
 		}()
-		count++
 	}
 }
