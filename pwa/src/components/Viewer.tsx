@@ -1,10 +1,12 @@
-import { Box, Typography, Tooltip, createTheme } from "@mui/material";
+import { Box, Typography, Tooltip } from "@mui/material";
 import { JsonViewer } from '@textea/json-viewer';
 
 import ExpandIcon from '@mui/icons-material/Expand';
 import StartIcon from "@mui/icons-material/Start";
 
-import type { State } from '../App';
+import { theme } from '@/App';
+
+import type { State } from '@/App';
 import type { JsonViewerProps } from '@textea/json-viewer'
 import type { SxProps } from "@mui/system";
 
@@ -12,8 +14,6 @@ type ViewerProp = {
   state: State,
   sx: SxProps,
 }
-
-const theme = createTheme();
 
 const Viewer = ({ state, sx }: ViewerProp) => {
   const { activeTabIndex, data, } = state;

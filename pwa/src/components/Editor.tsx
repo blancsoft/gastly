@@ -10,9 +10,10 @@ import CodeMirror from '@uiw/react-codemirror';
 import { StreamLanguage } from '@codemirror/language';
 import { go } from '@codemirror/legacy-modes/mode/go';
 
-import TabPanel from './TabPanel';
+import { theme } from '@/App';
+import TabPanel from '@/components/TabPanel';
 
-import type { State } from '../App';
+import type { State } from '@/App';
 
 type EditorProp = {
   state: State,
@@ -105,9 +106,12 @@ const Editor = ({ state, setState }: EditorProp) => {
         keys.map((item, index) => (
           <TabPanel key={index} value={activeTabIndex} index={index}>
             <CodeMirror
-              height="100%"
+              height={`calc(100vh - ${theme.spacing(14)})`}
               extensions={[StreamLanguage.define(go)]}
-              value={data[item]} onChange={onEditorChange} />
+              value={data[item]}
+              onChange={onEditorChange}
+              indentWithTab={true}
+            />
           </TabPanel>
         ))
       }

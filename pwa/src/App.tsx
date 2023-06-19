@@ -5,7 +5,8 @@ import dedent from "dedent";
 import {
     Box,
     Divider,
-    Typography
+    Typography,
+    createTheme
 } from '@mui/material';
 
 import Navbar from '@/components/Navbar.tsx';
@@ -21,6 +22,9 @@ import "@/assets/wasm_exec.js"
 import wasmURL from "@/assets/gastly.wasm?url"
 
 import type {IGo} from "./types"
+
+
+export const theme = createTheme();
 
 
 const loadWasm = async (): Promise<IGo> => {
