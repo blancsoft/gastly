@@ -5,8 +5,9 @@ import dedent from "dedent";
 import {
     Box,
     Divider,
+    SxProps,
     Typography,
-    createTheme
+    createTheme, useMediaQuery
 } from '@mui/material';
 
 import Navbar from '@/components/Navbar.tsx';
@@ -21,7 +22,7 @@ import '@fontsource/roboto/700.css';
 import "@/assets/wasm_exec.js"
 import wasmURL from "@/assets/gastly.wasm?url"
 
-import type {IGo} from "./types"
+import type { IGo } from "./types"
 
 
 export const theme = createTheme();
@@ -47,7 +48,7 @@ const loadWasm = async (): Promise<IGo> => {
 }
 
 const useWasm = () => {
-    const [go, setGo] = React.useState<IGo|null>(null);
+    const [go, setGo] = React.useState<IGo | null>(null);
 
     React.useEffect(() => {
         loadWasm().then(go => setGo(go));
@@ -60,7 +61,7 @@ const useWasm = () => {
 export type State = {
     showSearch: boolean,
     showAST: boolean,
-    data: {[key: string]: string},
+    data: { [key: string]: string },
     activeTabIndex: number,
 }
 
@@ -79,9 +80,11 @@ function App() {
     }
     `,
     }
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'))
+
     const [state, setState] = React.useState<State>({
         showSearch: false,
-        showAST: false,
+        showAST: !isMobile,
         data: fileData,
         activeTabIndex: 0,
     })
@@ -90,9 +93,19 @@ function App() {
         <>
             <Navbar showSearch={false} /> {/* TODO: enable search after fixing */}
             <Box sx={{ width: "100%", height: "100%", overflow: "hidden", display: "flex" }}>
-                <Editor state={state} setState={setState} />
+                <Editor state={state} setState={setState} sx={{
+                    display: {
+                        xs: isMobile && !state.showAST ? 'block' : 'none',
+                        md: 'block'
+                    }
+                }} />
                 <Divider orientation="vertical" variant="middle" flexItem />
-                <Viewer state={state} sx={{ display: { xs: 'none', md: 'block' } }} />
+                <Viewer state={state} setState={setState} sx={{
+                    display: {
+                        xs: isMobile && state.showAST ? 'block' : 'none',
+                        md: 'block'
+                    }
+                }} />
             </Box>
         </>
     )

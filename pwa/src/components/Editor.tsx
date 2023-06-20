@@ -14,25 +14,27 @@ import { theme } from '@/App';
 import TabPanel from '@/components/TabPanel';
 
 import type { State } from '@/App';
+import type { SxProps } from "@mui/system";
 
 type EditorProp = {
   state: State,
-  setState:  React.Dispatch<React.SetStateAction<State>>
+  setState: React.Dispatch<React.SetStateAction<State>>,
+  sx?: SxProps,
 }
 
 
 const goExt = ".go"
-const Editor = ({ state, setState }: EditorProp) => {
+const Editor = ({ state, setState, sx }: EditorProp) => {
   const { data, activeTabIndex } = state;
   const handleChange = (_: React.SyntheticEvent, tabIndex: number) => {
-    setState({...state, activeTabIndex: tabIndex})
+    setState({ ...state, activeTabIndex: tabIndex })
   };
 
   const keys = Object.keys(data).sort();
   const onEditorChange = React.useCallback((update: string) => {
     console.log('value:', update);
     const key = keys[activeTabIndex]
-    setState({...state, data: {...state.data, [key]: update}})
+    setState({ ...state, data: { ...state.data, [key]: update } })
   }, [state, activeTabIndex, keys, setState]);
 
   const [isDialogOpen, setDialogState] = React.useState(false);
@@ -44,40 +46,39 @@ const Editor = ({ state, setState }: EditorProp) => {
   const openDialog = () => setDialogState(true)
   const fileExists = () => (`${fileName}${goExt}` in data)
   const newFileDialog = (
-      <Dialog fullWidth open={isDialogOpen} onClose={closeDialog}>
-        <DialogTitle>New Go file</DialogTitle>
-        <DialogContent>
-          <TextField
-              value={fileName}
-              error={fileExists()}
-              helperText={fileExists() ?`${fileName}${goExt} already exist`:undefined}
-              autoFocus
-              margin="dense"
-              id="fileName"
-              label="File Name"
-              type="text"
-              fullWidth
-              variant="standard"
-              InputProps={{
-                endAdornment: <InputAdornment position="end">{goExt}</InputAdornment>,
-              }}
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                setFileName(event.target.value);
-              }}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button disabled={fileName in data || !fileName} onClick={() => {
-            setState({...state, data: {...state.data, [fileName + goExt]: "package main\n"}})
-            closeDialog()
-          }}>Create</Button>
-        </DialogActions>
-      </Dialog>
+    <Dialog fullWidth open={isDialogOpen} onClose={closeDialog}>
+      <DialogTitle>New Go file</DialogTitle>
+      <DialogContent>
+        <TextField
+          value={fileName}
+          error={fileExists()}
+          helperText={fileExists() ? `${fileName}${goExt} already exist` : undefined}
+          autoFocus
+          margin="dense"
+          id="fileName"
+          label="File Name"
+          type="text"
+          fullWidth
+          variant="standard"
+          InputProps={{
+            endAdornment: <InputAdornment position="end">{goExt}</InputAdornment>,
+          }}
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+            setFileName(event.target.value);
+          }}
+        />
+      </DialogContent>
+      <DialogActions>
+        <Button disabled={fileName in data || !fileName} onClick={() => {
+          setState({ ...state, data: { ...state.data, [fileName + goExt]: "package main\n" } })
+          closeDialog()
+        }}>Create</Button>
+      </DialogActions>
+    </Dialog>
   )
 
-
   return (
-    <Box sx={{ width: "100%", height: "100%", overflow: "hidden" }}>
+    <Box sx={{ width: "100%", height: "100%", overflow: "hidden", ...sx }}>
       <Box sx={{ display: { xs: 'flex', justifyContent: 'space-between', alignItems: 'center' }, borderBottom: 1, borderColor: 'divider' }}>
         <Tabs value={activeTabIndex} onChange={handleChange} sx={{ alignItems: 'center' }}
           variant="scrollable" scrollButtons="auto"
@@ -97,7 +98,11 @@ const Editor = ({ state, setState }: EditorProp) => {
             <IconButton aria-label="Create new tab" onClick={openDialog} sx={{ mr: 1 }}><AddIcon /></IconButton>
           </Tooltip>
           <Tooltip title="View AST">
-            <IconButton aria-label="View source AST" sx={{ display: { md: 'none' }, mr: 1 }}><StartIcon /></IconButton>
+            <IconButton
+              aria-label="View source AST"
+              sx={{ display: { md: 'none' }, mr: 1 }}
+              onClick={()=>setState({...state, showAST: true})}
+            ><StartIcon /></IconButton>
           </Tooltip>
         </Box>
       </Box>
@@ -116,7 +121,7 @@ const Editor = ({ state, setState }: EditorProp) => {
         ))
       }
 
-      { isDialogOpen && newFileDialog }
+      {isDialogOpen && newFileDialog}
     </Box>
   )
 }

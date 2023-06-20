@@ -12,10 +12,11 @@ import type { SxProps } from "@mui/system";
 
 type ViewerProp = {
   state: State,
+  setState: React.Dispatch<React.SetStateAction<State>>,
   sx: SxProps,
 }
 
-const Viewer = ({ state, sx }: ViewerProp) => {
+const Viewer = ({ setState, state, sx }: ViewerProp) => {
   const { activeTabIndex, data, } = state;
 
   const fileName = Object.keys(data).sort()[activeTabIndex]
@@ -46,7 +47,8 @@ const Viewer = ({ state, sx }: ViewerProp) => {
         display: { xs: 'flex' }, justifyContent: 'space-between', alignItems: 'center',
       }}>
         <Tooltip title="View source code">
-          <StartIcon sx={{ display: { md: 'none' }, ml: 2, transform: 'rotate(180deg)' }} />
+          <StartIcon sx={{ display: { md: 'none' }, ml: 2, transform: 'rotate(180deg)' }} 
+              onClick={()=>setState({...state, showAST: false})} />
         </Tooltip>
         <Typography component="p" sx={{ flexGrow: 1, ml: 2, py: 1.5 }}>
           AST
