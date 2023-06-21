@@ -1,6 +1,7 @@
 import * as React from 'react';
 import StartIcon from '@mui/icons-material/Start';
 import AddIcon from '@mui/icons-material/Add';
+import CloseIcon from '@mui/icons-material/Close';
 import {
   Tabs, Tab, Box, Button, IconButton, Tooltip, TextField,
   InputAdornment, DialogTitle, Dialog, DialogActions, DialogContent
@@ -58,7 +59,7 @@ const Editor = ({ state, setState }: EditorProp) => {
   const [isDialogOpen, setDialogState] = React.useState(false);
   const [fileName, setFileName] = React.useState("");
   const fileNameExt = React.useMemo(() => {
-    return fileName + goExt
+    return (fileName + goExt).toLowerCase()
   }, [fileName, goExt])
   const closeDialog = () => {
     setFileName("")
@@ -95,6 +96,18 @@ const Editor = ({ state, setState }: EditorProp) => {
       </DialogActions>
     </Dialog>
   )
+
+  const handleTabClose = (tabIndex: number) => {
+    setState((prevState) => {
+      const keys = Object.keys(prevState.data).sort();
+      if (keys.length <= 1) return prevState;
+
+      const newData = { ...prevState.data };
+      delete newData[keys[tabIndex]];
+      const activeTabIndex = (tabIndex == keys.length - 1) ? tabIndex - 1 : prevState.activeTabIndex 
+      return { ...prevState, data: newData, activeTabIndex };
+    });
+  };
   const tabs = (
     <Box sx={{ display: { xs: 'flex', justifyContent: 'space-between', alignItems: 'center' }, borderBottom: 1, borderColor: 'divider' }}>
       <Tabs value={activeTabIndex} onChange={handleTabChange} sx={{ alignItems: 'center' }}
@@ -102,10 +115,17 @@ const Editor = ({ state, setState }: EditorProp) => {
         aria-label="editor tabs">
         {
           keys.map((item, index) => (
-            <Tab key={index} label={item} {...{
-              id: `editor-tab-${index}`,
-              'aria-controls': `editor-tabpanel-${index}`,
-            }} />
+            <Tab key={index} label={item} sx={{ minHeight: "unset" }}
+              icon={
+                <span aria-label="Close tab" onClick={() => handleTabClose(index)}>
+                  <CloseIcon fontSize="small" />
+                </span>
+              }
+              iconPosition="end"
+              {...{
+                id: `editor-tab-${index}`,
+                'aria-controls': `editor-tabpanel-${index}`,
+              }} />
           ))
         }
 
