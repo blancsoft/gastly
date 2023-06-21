@@ -21,7 +21,7 @@ import '@fontsource/roboto/700.css';
 import "@/assets/wasm_exec.js"
 import wasmURL from "@/assets/gastly.wasm?url"
 
-import type {IGo} from "./types"
+import type { IGo } from "./types"
 
 
 export const theme = createTheme();
@@ -47,7 +47,7 @@ const loadWasm = async (): Promise<IGo> => {
 }
 
 const useWasm = () => {
-    const [go, setGo] = React.useState<IGo|null>(null);
+    const [go, setGo] = React.useState<IGo | null>(null);
 
     React.useEffect(() => {
         loadWasm().then(go => setGo(go));
@@ -60,24 +60,32 @@ const useWasm = () => {
 export type State = {
     showSearch: boolean,
     showAST: boolean,
-    data: {[key: string]: string},
+    data: { [key: string]: string },
     activeTabIndex: number,
 }
 
 function App() {
     const go = useWasm();
-    const fileData = {
-        'main.go': dedent`
-    // You can edit this code!
-    // Click here and start typing.
-    package main
-    
-    import "fmt"
-    
-    func main() {
-        fmt.Println("Hello, 世界")
-    }
-    `,
+
+    let fileData: { [p: string]: string } = {};
+    try {
+        fileData = JSON.parse(localStorage.getItem("fileData") ?? "{}")
+    } finally {
+        if (Object.keys(fileData).length == 0) {
+            fileData = {
+                'main.go': dedent`
+            // You can edit this code!
+            // Click here and start typing.
+            package main
+            
+            import "fmt"
+            
+            func main() {
+                fmt.Println("Hello, 世界")
+            }
+            `,
+            }
+        }
     }
     const [state, setState] = React.useState<State>({
         showSearch: false,
