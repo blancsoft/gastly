@@ -104,7 +104,7 @@ const Editor = ({ state, setState }: EditorProp) => {
 
       const newData = { ...prevState.data };
       delete newData[keys[tabIndex]];
-      const activeTabIndex = (tabIndex == keys.length - 1) ? tabIndex - 1 : prevState.activeTabIndex 
+      const activeTabIndex = (tabIndex == keys.length - 1) ? tabIndex - 1 : prevState.activeTabIndex
       return { ...prevState, data: newData, activeTabIndex };
     });
   };
