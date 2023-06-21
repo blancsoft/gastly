@@ -57,7 +57,7 @@ const Viewer = ({ state, sx }: ViewerProp) => {
       </Box>
 
       <Box sx={{ pl: 2 }} >
-        <JsonViewer {...viewerOpts} sx={{ height: `calc(100vh - ${theme.spacing(16)})`, overflowY: "scroll" }} />
+        <JsonViewer {...viewerOpts} sx={{ height: `calc(100vh - ${theme.spacing(14)})`, overflowY: "scroll" }} />
       </Box>
     </Box>
   )
