@@ -10,7 +10,7 @@ serve: build-server
 build-wasm: clean
 	@cp $(shell go env GOROOT)/misc/wasm/wasm_exec.js "./pwa/src/assets/wasm_exec.js"
 	@GOARCH=wasm GOOS=js go build -ldflags="-s -w" -o "./pwa/src/assets/gastly.wasm" "./cmd/wasm/main.go"
-	@#brotli --force --rm --output="pwa/src/assets/gastly.wasm.br" "pwa/public/gastly.wasm"
+	@brotli --force --rm --output="pwa/src/assets/gastly.wasm.br" "pwa/src/assets/gastly.wasm"
 
 test:
 	@go test ./...

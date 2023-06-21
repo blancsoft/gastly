@@ -1,6 +1,4 @@
 import * as React from 'react';
-// import brotli from 'brotli';
-import dedent from "dedent";
 
 import {
     Box,
@@ -19,7 +17,7 @@ import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 
 import "@/assets/wasm_exec.js"
-import wasmURL from "@/assets/gastly.wasm?url"
+import wasmURL from "@/assets/gastly.wasm.br?url"
 
 import type { IGo } from "./types"
 
@@ -73,17 +71,15 @@ function App() {
     } finally {
         if (Object.keys(fileData).length == 0) {
             fileData = {
-                'main.go': dedent`
-            // You can edit this code!
-            // Click here and start typing.
-            package main
-            
-            import "fmt"
-            
-            func main() {
-                fmt.Println("Hello, 世界")
-            }
-            `,
+                'main.go': (
+                    "// You can edit this code!\n" +
+                    "// Click here and start typing.\n" +
+                    "package main\n\n" +
+                    'import "fmt"\n\n' +
+                    "func main() {\n" +
+                    '\tfmt.Println("Hello, 世界")\n' +
+                    "}\n"
+                ),
             }
         }
     }
