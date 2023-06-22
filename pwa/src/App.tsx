@@ -24,9 +24,7 @@ import type { IGo } from "./types"
 
 export const theme = createTheme();
 
-
 const loadWasm = async (): Promise<IGo> => {
-
     const go = new window.Go(); // Defined in wasm_exec.js
     let instance: WebAssembly.Instance;
 

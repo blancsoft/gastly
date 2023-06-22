@@ -16,4 +16,17 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ["./src/setupTests.ts"],
   },
+  build: {
+    rollupOptions: {
+      output: {
+        assetFileNames: ({ name }) => {
+          if (name.endsWith("wasm.br")) {
+            return "assets/[name][extname]"
+          }
+
+          return "assets/[name]-[hash][extname]"
+        }
+      }
+    }
+  }
 })
