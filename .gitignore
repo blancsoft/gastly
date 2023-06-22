@@ -37,3 +37,6 @@ go.work
 
 # compiled wasm
 web/app.wasm
+
+# Local Netlify folder
+.netlify
