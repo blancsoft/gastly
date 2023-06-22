@@ -3,7 +3,7 @@ import zlib from "zlib";
 export const Brotli = {
   getParams(mode?: number, quality?: number, sizeHint?: number) {
     const params =  {
-      [zlib.constants.BROTLI_PARAM_MODE]: mode ?? zlib.constants.BROTLI_MODE_TEXT,
+      [zlib.constants.BROTLI_PARAM_MODE]: mode ?? zlib.constants.BROTLI_DEFAULT_MODE,
       [zlib.constants.BROTLI_PARAM_QUALITY]: quality ?? zlib.constants.BROTLI_MAX_QUALITY
     }
     if (sizeHint) {
@@ -30,4 +30,3 @@ export const Brotli = {
     })
   }
 }
-
