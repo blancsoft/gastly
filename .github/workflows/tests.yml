@@ -1,0 +1,26 @@
+name: Test
+on: [push, pull_request]
+jobs:
+  test:
+    strategy:
+      matrix:
+        go-version: [1.16, 1.17, 1.18, 1.19]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Setup
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go-version }}
+      - name: Install chrome
+        uses: browser-actions/setup-chrome@latest
+      - name: Install wasmbrowsertest
+        run: go install github.com/agnivade/wasmbrowsertest@latest
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: WASM test
+        env: { GOOS: js, GOARCH: wasm }
+        run: go test -v -exec="$(shell go env GOROOT)/misc/wasm/go_js_wasm_exec" ./...
+      - name: WASM test in browser
+        env: { GOOS: js, GOARCH: wasm }
+        run: go test -exec="$(go env GOPATH)/bin/wasmbrowsertest"

@@ -1,13 +1,13 @@
 //go:build js && wasm
 
-package ast_test
+package js_test
 
 import (
 	"fmt"
 	"syscall/js"
 	"testing"
 
-	. "github.com/blancsoft/gastly/ast"
+	. "github.com/blancsoft/gastly/js"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -105,11 +105,9 @@ func TestConvertToJSValue(t *testing.T) {
 	// Run test cases
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
-			actual := ConvertToJSValue(tc.Input)
+			actual := js.Value(ValueOf(tc.Input))
 
-			//assert.Equal(t, actual, tc.Expected)
-
-			isEqual := deepEqual(actual, tc.Expected)
+			isEqual := deepEqual(js.Value(actual), tc.Expected)
 			if !isEqual {
 				stringify := js.Global().Get("JSON").Get("stringify")
 				errMsg := fmt.Sprintf("Comparison mismatch:\n\tx:  %s(%s)\n\tx:  %s(%s)\n",
