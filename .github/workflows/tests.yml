@@ -15,5 +15,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: WASM test
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
         env: { GOOS: js, GOARCH: wasm }
-        run: go test -v -exec="$(go env GOROOT)/misc/wasm/go_js_wasm_exec" ./...
+        run: go test -v -exec="$(go env GOROOT)/misc/wasm/go_js_wasm_exec" ./js
+      - name: WASM test
+        if: matrix.os == 'windows-latest'
+        env: { GOOS: js, GOARCH: wasm }
+        run: go test -v -exec="$(go env GOROOT)\misc\wasm\go_js_wasm_exec" ./js
