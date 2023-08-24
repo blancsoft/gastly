@@ -18,7 +18,10 @@ jobs:
         if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
         env: { GOOS: js, GOARCH: wasm }
         run: go test -v -exec="$(go env GOROOT)/misc/wasm/go_js_wasm_exec" ./js
-      - name: WASM test
+      - name: WASM test for Windows
         if: matrix.os == 'windows-latest'
+        shell: C:\Program Files\Git\bin\bash.exe -e {0}
         env: { GOOS: js, GOARCH: wasm }
-        run: go test -v -exec="$(go env GOROOT)\misc\wasm\go_js_wasm_exec" ./js
+        run: |
+          ls -aslh "$(go env GOROOT)";
+          go test -v -exec="$(go env GOROOT)/misc/wasm/go_js_wasm_exec" ./js
