@@ -1,5 +1,5 @@
 import path from "path";
-import { exec } from "node:child_process"
+import { execSync } from "node:child_process"
 
 
 import { defineConfig } from 'vitest/config'
@@ -10,10 +10,8 @@ const go = (): PluginOption => {
   return {
     name: 'go-build',
     enforce: 'pre',
-    options(options) {
-      exec("make build", (err) => {
-        if (err) throw err
-      })
+    buildStart() {
+      execSync("make build")
     },
   }
 }
