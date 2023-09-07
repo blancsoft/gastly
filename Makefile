@@ -1,30 +1,31 @@
-.PHONY: serve build-wasm build test lint clean help
+.PHONY: build test coverage lint clean help
 SHELL := '/bin/bash'
 .DEFAULT_GOAL := help
 
 
+build: clean ## build WASM module
+	@cp $(shell go env GOROOT)/misc/wasm/wasm_exec.js ./src/assets/wasm_exec.js
+	@GOARCH=wasm GOOS=js go build -ldflags="-s -w" -o ./src/assets/gastly.wasm ./main.go
+	@brotli --force --rm --output=./src/assets/gastly.wasm.br ./src/assets/gastly.wasm
 
-serve: build-server
-	@go run $(PWA_MAIN) -serve
+test: clean ## run lib tests
+	@go test -race -v -covermode=atomic -coverprofile=coverage.out ./lib/...
 
-build-wasm: clean
-	@cp $(shell go env GOROOT)/misc/wasm/wasm_exec.js "./pwa/src/assets/wasm_exec.js"
-	@GOARCH=wasm GOOS=js go build -ldflags="-s -w" -o "./pwa/src/assets/gastly.wasm" "./cmd/wasm/main.go"
-	@brotli --force --rm --output="pwa/src/assets/gastly.wasm.br" "pwa/src/assets/gastly.wasm"
+test-wasm: clean ## run wasm tests
+	@GOOS=js GOARCH=wasm go test -v -covermode=atomic -coverprofile=coverage.out \
+		-v -exec="$(shell go env GOROOT)/misc/wasm/go_js_wasm_exec" ./lib/wasm/...
 
-test:
-	@go test ./...
-	@GOOS=js GOARCH=wasm go test -v -exec="$(shell go env GOROOT)/misc/wasm/go_js_wasm_exec" ./...
+coverage: ## check test coverage
+	@go tool cover -func=coverage.out
+	@go tool cover -html=coverage.out -o coverage.html
 
 lint: ## lint go files in current directory
-	@go run honnef.co/go/tools/cmd/staticcheck@2023.1 ./...
-
-build: ## build in snapshot mode
-	@goreleaser release --snapshot --rm-dist
+	@go run honnef.co/go/tools/cmd/staticcheck@2023.1 github.com/chumaumenze/gastly/lib/...
 
 clean: ## remove build artefacts
 	@go clean
-	@rm -rf "./pwa/public/gastly.wasm*" "./pwa/public/wasm_exec.js"
+	@rm -f coverage.out coverage.html
+	@rm -rf ./src/assets/gastly.wasm.br ./src/assets/wasm_exec.js
 
 
 # got from :https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html

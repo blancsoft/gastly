@@ -71,18 +71,18 @@ func FromSourceCode(fname string, code string) Result {
 	fset := token.NewFileSet()
 	node, err := parser.ParseFile(fset, fname, code, parser.ParseComments)
 	if err != nil {
-		return Result{Name: fname, Err: err, ErrMsg: err.Error(),}
+		return Result{Name: fname, Err: err, ErrMsg: err.Error()}
 	}
 
 	var source bytes.Buffer
 	if err := printer.Fprint(&source, fset, node); err != nil {
 		err = eris.Wrapf(err, "unable to collate source")
-		return Result{Name: fname, Err: err, ErrMsg: err.Error(),}
+		return Result{Name: fname, Err: err, ErrMsg: err.Error()}
 	}
 
 	t, d, err := generate(fset, node)
 	if err != nil {
-		return Result{Name: fname, Err: err, ErrMsg: err.Error(),}
+		return Result{Name: fname, Err: err, ErrMsg: err.Error()}
 	}
 
 	return Result{
