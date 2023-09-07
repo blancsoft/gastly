@@ -6,7 +6,6 @@ SHELL := '/bin/bash'
 build: clean ## build WASM module
 	@cp $(shell go env GOROOT)/misc/wasm/wasm_exec.js ./src/assets/wasm_exec.js
 	@GOARCH=wasm GOOS=js go build -ldflags="-s -w" -o ./src/assets/gastly.wasm ./main.go
-	@brotli --force --rm --output=./src/assets/gastly.wasm.br ./src/assets/gastly.wasm
 
 test: clean ## run lib tests
 	@go test -race -v -covermode=atomic -coverprofile=coverage.out ./lib/...
@@ -25,7 +24,7 @@ lint: ## lint go files in current directory
 clean: ## remove build artefacts
 	@go clean
 	@rm -f coverage.out coverage.html
-	@rm -rf ./src/assets/gastly.wasm.br ./src/assets/wasm_exec.js
+	@rm -rf ./src/assets/gastly.wasm* ./src/assets/wasm_exec.js
 
 
 # got from :https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html

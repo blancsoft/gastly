@@ -1,17 +1,25 @@
+import fs from 'fs';
 import path from "path";
 import { execSync } from "node:child_process"
-
 
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import type { PluginOption } from "vite";
 
+import brotli from "./src/utils/helpers";
+
+const WASM_FILE = path.resolve(__dirname, 'src', 'assets', 'gastly.wasm')
+
 const go = (): PluginOption => {
   return {
     name: 'go-build',
     enforce: 'pre',
-    buildStart() {
+    async buildStart() {
       execSync("make build")
+
+      const wasmBuffer = fs.readFileSync(WASM_FILE);
+      const compressedWasm = await brotli.compress(wasmBuffer);
+      fs.writeFileSync(WASM_FILE+".br", compressedWasm);
     },
   }
 }
