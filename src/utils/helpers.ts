@@ -1,6 +1,6 @@
 import zlib from "zlib";
 
-export const Brotli = {
+export const brotli = {
   getParams(mode?: number, quality?: number, sizeHint?: number) {
     const params =  {
       [zlib.constants.BROTLI_PARAM_MODE]: mode ?? zlib.constants.BROTLI_DEFAULT_MODE,
@@ -30,3 +30,5 @@ export const Brotli = {
     })
   }
 }
+
+export default brotli;
