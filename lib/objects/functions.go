@@ -1,14 +1,14 @@
 //go:build js && wasm
+// +build js,wasm
 
 package objects
 
 import (
-	"errors"
 	"fmt"
 	"syscall/js"
 
-	"github.com/blancsoft/gastly/ast"
-	gastlyJS "github.com/blancsoft/gastly/js"
+	"github.com/chumaumenze/gastly/lib/ast"
+	"github.com/chumaumenze/gjs"
 )
 
 func FromSourceCode(this js.Value, args []js.Value) any {
@@ -18,7 +18,7 @@ func FromSourceCode(this js.Value, args []js.Value) any {
 	fname := args[0].String()
 	code := args[1].String()
 	result := ast.FromSourceCode(fname, code)
-	return gastlyJS.ValueOf(result).Unwrap()
+	return gjs.ValueOf(result).Into()
 }
 
 func FromPackages(this js.Value, args []js.Value) any {
@@ -27,15 +27,5 @@ func FromPackages(this js.Value, args []js.Value) any {
 		pkgNames = append(pkgNames, pn.String())
 	}
 	result := ast.FromPackages(pkgNames...)
-	return gastlyJS.ValueOf(result).Unwrap()
-}
-
-func GetRepositoryDetails(this js.Value, args []js.Value) any {
-	// TODO: implement me
-	panic(errors.New("not implemented"))
-}
-
-func FetchRepository(this js.Value, args []js.Value) any {
-	// TODO: implement me
-	panic(errors.New("not implemented"))
+	return gjs.ValueOf(result).Into()
 }
